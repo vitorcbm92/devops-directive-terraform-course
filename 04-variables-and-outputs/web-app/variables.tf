@@ -1,4 +1,7 @@
+# Which variables can we set during command lines? These defined below and referenced in main.tf file.
+
 # General Variables
+
 
 variable "region" {
   description = "Default region for provider"
@@ -46,6 +49,7 @@ variable "db_user" {
   type        = string
 }
 
+# Sensitive = true wont ECHO the variable on the terminal.
 variable "db_pass" {
   description = "Password for DB"
   type        = string

@@ -1,8 +1,12 @@
+# This block configures the backend, 
+# specifying that the Terraform state will be stored in an S3 bucket (devops-directive-tf-state-vcbm), 
+# with a specific key and using DynamoDB (terraform-state-locking) for state locking.
+
 terraform {
   # Assumes s3 bucket and dynamo DB table already set up
   # See /code/03-basics/aws-backend
   backend "s3" {
-    bucket         = "devops-directive-tf-state"
+    bucket         = "devops-directive-tf-state-vcbm"
     key            = "03-basics/web-app/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform-state-locking"
@@ -17,10 +21,18 @@ terraform {
   }
 }
 
+# END
+
+# This section configures the AWS provider with the region set to us-east-1.
+
 provider "aws" {
   region = "us-east-1"
 }
 
+# END
+
+
+# Defines two EC2 instances (instance_1 and instance_2) with specific configurations such as AMI, instance type, security groups, and user data.
 resource "aws_instance" "instance_1" {
   ami             = "ami-011899242bb902164" # Ubuntu 20.04 LTS // us-east-1
   instance_type   = "t2.micro"
@@ -43,6 +55,9 @@ resource "aws_instance" "instance_2" {
               EOF
 }
 
+# END
+
+# Creates an S3 bucket (bucket) with versioning and server-side encryption enabled.
 resource "aws_s3_bucket" "bucket" {
   bucket_prefix = "devops-directive-web-app-data"
   force_destroy = true
@@ -71,6 +86,10 @@ data "aws_vpc" "default_vpc" {
 data "aws_subnet_ids" "default_subnet" {
   vpc_id = data.aws_vpc.default_vpc.id
 }
+
+# END
+
+# Configures security groups for EC2 instances (instances) and ALB (alb) with specific rules.
 
 resource "aws_security_group" "instances" {
   name = "instance-security-group"
@@ -177,6 +196,9 @@ resource "aws_security_group_rule" "allow_alb_all_outbound" {
 
 }
 
+# END
+
+# Defines an Application Load Balancer (load_balancer) with specific settings, including subnets and security groups.
 
 resource "aws_lb" "load_balancer" {
   name               = "web-app-lb"
@@ -185,6 +207,10 @@ resource "aws_lb" "load_balancer" {
   security_groups    = [aws_security_group.alb.id]
 
 }
+
+# END
+
+# Sets up a Route 53 hosted zone (primary) and a DNS record (root) pointing to the ALB.
 
 resource "aws_route53_zone" "primary" {
   name = "devopsdeployed.com"
@@ -201,6 +227,10 @@ resource "aws_route53_record" "root" {
     evaluate_target_health = true
   }
 }
+
+# END
+
+# Defines an RDS PostgreSQL database instance (db_instance) with specific configurations, such as allocated storage, engine version, and credentials.
 
 resource "aws_db_instance" "db_instance" {
   allocated_storage = 20
